@@ -1,0 +1,136 @@
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #1f2933;
+  --muted: #64707d;
+  --line: #cfd6dd;
+  --blue: #208bd8;
+  --green: #46b96a;
+  --orange: #f59f18;
+  --red-soft: #ffd8df;
+  --red-text: #7f1d2d;
+  --shadow: 0 10px 26px rgba(30, 41, 51, 0.12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-width: 1120px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+}
+button, input, select { font: inherit; }
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(520px, 1fr) 620px;
+  gap: 14px;
+  width: 100vw;
+  height: 100vh;
+  padding: 14px;
+}
+.capture-pane, .work-pane { min-height: 0; }
+.capture-pane { display: grid; grid-template-rows: 1fr auto auto; gap: 10px; }
+.viewer {
+  position: relative;
+  overflow: hidden;
+  min-height: 420px;
+  background: #111820;
+  border: 1px solid #26323e;
+  box-shadow: var(--shadow);
+}
+#camera, #preview {
+  width: 100%;
+  height: 100%;
+  display: none;
+  object-fit: contain;
+  background: #10151b;
+}
+#snapshot { display: none; }
+.empty-preview {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #d9e1e8;
+  font-size: 18px;
+}
+.capture-toolbar, .folder-strip, .action-row, .records-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.folder-strip { display: grid; grid-template-columns: auto auto 1fr auto; }
+.tool-button, .action-button, .small-button, .icon-button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  border-radius: 6px;
+}
+.tool-button, .action-button { padding: 0 18px; font-weight: 700; }
+.small-button { min-height: 30px; padding: 0 10px; }
+.icon-button { min-width: 52px; padding: 0 10px; }
+.primary, .blue { background: var(--blue); border-color: var(--blue); color: white; }
+.green { background: var(--green); border-color: var(--green); color: white; }
+.warning { background: var(--orange); border-color: var(--orange); color: white; }
+.strong { border-color: #38495a; background: #38495a; color: white; }
+#fileQueue {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 8px;
+  background: white;
+}
+.work-pane {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(220px, 1fr) minmax(170px, 0.65fr);
+  gap: 8px;
+}
+.status {
+  min-height: 34px;
+  padding: 8px 12px;
+  text-align: center;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.status.warning { background: var(--red-soft); color: var(--red-text); border: 1px solid #f4afbb; }
+.status.ok { background: #dff6e7; color: #14532d; border: 1px solid #9ee2b1; }
+.status.busy { background: #dceefd; color: #164e7a; border: 1px solid #9ccdf0; }
+.action-row { display: grid; grid-template-columns: 1fr 1fr; }
+.panel { min-height: 0; background: var(--panel); border: 1px solid var(--line); padding: 10px; }
+.section-title { font-weight: 700; margin-bottom: 8px; }
+.field-line {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.field-line input, .score-input {
+  width: 100%;
+  height: 30px;
+  border: 1px solid #b9c2cb;
+  padding: 0 8px;
+}
+.table-wrap { overflow: auto; border: 1px solid var(--line); background: white; }
+.score-table, .records-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th, td { border: 1px solid #d7dde3; padding: 6px 8px; text-align: center; white-space: nowrap; }
+th { background: #f5f7f9; font-weight: 700; }
+.scores-panel { display: grid; grid-template-rows: auto 1fr auto; }
+.total-line { padding-top: 8px; font-size: 18px; font-weight: 700; }
+.records-panel { display: grid; grid-template-rows: auto 1fr; }
+.records-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.records-table-wrap { min-height: 130px; }
+.records-table tr.selected { background: #e6f2ff; }
+@media (max-width: 900px) {
+  body { min-width: 0; }
+  .app-shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+  .work-pane { grid-template-rows: auto; }
+}

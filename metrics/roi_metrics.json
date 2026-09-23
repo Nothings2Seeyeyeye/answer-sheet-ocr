@@ -1,0 +1,83 @@
+{
+  "rows": 1412,
+  "iou_threshold": 0.5,
+  "overall": {
+    "recall_at_iou": 1.0,
+    "mean_iou": 0.885809,
+    "mean_conf": 0.886583
+  },
+  "splits": {
+    "train": {
+      "rows": 692,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.89287
+    },
+    "val": {
+      "rows": 720,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.879022
+    }
+  },
+  "fields": {
+    "name": {
+      "rows": 142,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.852061,
+      "mean_conf": 0.849845
+    },
+    "score_1": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.915854,
+      "mean_conf": 0.94011
+    },
+    "score_2_1": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.893047,
+      "mean_conf": 0.905523
+    },
+    "score_2_2": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.895729,
+      "mean_conf": 0.910031
+    },
+    "score_2_3": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.893087,
+      "mean_conf": 0.899005
+    },
+    "score_2_4": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.892252,
+      "mean_conf": 0.917364
+    },
+    "score_2_5": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.889333,
+      "mean_conf": 0.904755
+    },
+    "score_2_6": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.891266,
+      "mean_conf": 0.897164
+    },
+    "student_id": {
+      "rows": 142,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.846995,
+      "mean_conf": 0.779192
+    },
+    "total": {
+      "rows": 141,
+      "recall_at_iou": 1.0,
+      "mean_iou": 0.88898,
+      "mean_conf": 0.863862
+    }
+  }
+}

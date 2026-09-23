@@ -1,0 +1,57 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- 通用 ----
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# ---- Vercel ----
+.vercel/
+
+# ---- 依赖 ----
+node_modules/
+
+# ---- 隐私：真实答题卡图片与真实学生信息（禁止入库）----
+labelimg_dataset/
+frontend_outputs/
+results/
+results_70_72/
+results_joint_70_72/
+results_joint_new_models_test/
+results_joint_test/
+runs/
+runs_70_72/
+
+# ---- 竞赛与专利材料（含未公开专利交底书，公开会破坏新颖性）----
+patent_docs_work/
+ppt_competition_work/
+docs/
+
+# ---- 数据标注明细与缓存（保留 labels 与 data.yaml 供训练参考）----
+data/**/*.cache
+data/*/field_ground_truth.csv
+
+# ---- 冗余产物 ----
+ocr_student_customer_reproducible.zip
+PACKAGE_MANIFEST.json
+yolo11n.pt
+yolo26n.pt
+
+# ---- PyTorch 训练权重（推理统一走 ONNX，见 *.onnx）----
+*.pt
+
+# ---- 旧版 / 基础数字模型目录（保留 roi_score_digit_cnn 与 roi_student_digit_cnn 的 ONNX）----
+models/base_mnist_digit_cnn/
+models/roi_digit_cnn/
+models/roi_score_digit_cnn_70_72/
+models/roi_student_digit_cnn_70_72/
+
+# ---- 第三方组件中的测试图 ----
+third_party/chineseocr_lite/dbnet/test.jpg

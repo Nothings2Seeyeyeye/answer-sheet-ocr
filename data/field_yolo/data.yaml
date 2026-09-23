@@ -1,0 +1,14 @@
+path: /root/ocr_student/OCR_Students0718/data/field_yolo
+train: images/train
+val: images/val
+names:
+  0: name
+  1: student_id
+  2: score_1
+  3: score_2_1
+  4: score_2_2
+  5: score_2_3
+  6: score_2_4
+  7: score_2_5
+  8: score_2_6
+  9: total

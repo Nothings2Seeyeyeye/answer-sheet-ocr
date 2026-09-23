@@ -1,0 +1,97 @@
+{
+  "rows": 1412,
+  "overall": {
+    "text_accuracy": 0.470255,
+    "mean_roi_iou": 0.883951,
+    "mean_det_conf": 0.892075
+  },
+  "fields": {
+    "name": {
+      "rows": 142,
+      "text_accuracy": 0.0,
+      "mean_roi_iou": 0.849228,
+      "mean_det_conf": 0.874868,
+      "mean_final_conf": 0.632503
+    },
+    "score_1": {
+      "rows": 141,
+      "text_accuracy": 0.382979,
+      "mean_roi_iou": 0.915854,
+      "mean_det_conf": 0.94011,
+      "mean_final_conf": 0.875898
+    },
+    "score_2_1": {
+      "rows": 141,
+      "text_accuracy": 0.58156,
+      "mean_roi_iou": 0.893047,
+      "mean_det_conf": 0.905523,
+      "mean_final_conf": 0.917888
+    },
+    "score_2_2": {
+      "rows": 141,
+      "text_accuracy": 0.843972,
+      "mean_roi_iou": 0.888844,
+      "mean_det_conf": 0.912337,
+      "mean_final_conf": 0.976202
+    },
+    "score_2_3": {
+      "rows": 141,
+      "text_accuracy": 0.723404,
+      "mean_roi_iou": 0.893087,
+      "mean_det_conf": 0.899005,
+      "mean_final_conf": 0.948844
+    },
+    "score_2_4": {
+      "rows": 141,
+      "text_accuracy": 0.787234,
+      "mean_roi_iou": 0.892252,
+      "mean_det_conf": 0.917364,
+      "mean_final_conf": 0.969871
+    },
+    "score_2_5": {
+      "rows": 141,
+      "text_accuracy": 0.921986,
+      "mean_roi_iou": 0.88265,
+      "mean_det_conf": 0.904669,
+      "mean_final_conf": 0.967225
+    },
+    "score_2_6": {
+      "rows": 141,
+      "text_accuracy": 0.397163,
+      "mean_roi_iou": 0.891266,
+      "mean_det_conf": 0.897164,
+      "mean_final_conf": 0.868143
+    },
+    "student_id": {
+      "rows": 142,
+      "text_accuracy": 0.0,
+      "mean_roi_iou": 0.844829,
+      "mean_det_conf": 0.806579,
+      "mean_final_conf": 0.654243
+    },
+    "total": {
+      "rows": 141,
+      "text_accuracy": 0.070922,
+      "mean_roi_iou": 0.88898,
+      "mean_det_conf": 0.863862,
+      "mean_final_conf": 0.989829
+    }
+  },
+  "splits": {
+    "train": {
+      "rows": 692,
+      "text_accuracy": 0.488439,
+      "mean_roi_iou": 0.892579
+    },
+    "val": {
+      "rows": 720,
+      "text_accuracy": 0.452778,
+      "mean_roi_iou": 0.875659
+    }
+  },
+  "image_level": {
+    "all_fields_accuracy": 0.0,
+    "train": 0.0,
+    "val": 0.0
+  }
+}
