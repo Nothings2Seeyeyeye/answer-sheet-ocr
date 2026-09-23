@@ -117,7 +117,7 @@
 ### 1. 安装依赖
 
 ```bash
-git clone https://github.com/<your-org>/answer-sheet-ocr.git
+git clone https://github.com/Nothings2Seeyeyeye/answer-sheet-ocr.git
 cd answer-sheet-ocr
 
 # 推荐使用独立虚拟环境
