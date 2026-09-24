@@ -15,9 +15,9 @@
 </div>
 
 <p align="center">
-  <img src="assets/demo.png" alt="答题卡识别系统演示：YOLO 字段检测 + 分字段识别 + Web 界面" width="100%" />
+  <img src="assets/demo.gif" alt="答题卡识别系统完整流程演示" width="100%" />
   <br/>
-  <em>YOLO 字段检测（左）与 Web 识别结果界面（右）</em>
+  <em>完整流程演示：拍照 → 识别 → 人工核对 → 确认记录 → 导出 Excel</em>
 </p>
 
 ---
