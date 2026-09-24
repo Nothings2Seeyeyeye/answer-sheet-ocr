@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import functools
+import io
 import json
 import sys
 import tempfile
@@ -22,6 +23,14 @@ try:
     from scripts.text_utils import clean_chinese_name, clean_digits, clean_number
 except ModuleNotFoundError:
     from text_utils import clean_chinese_name, clean_digits, clean_number
+
+try:
+    from scripts.paddleocr_api import recognize_text as _paddleocr_api_recognize
+except ModuleNotFoundError:
+    try:
+        from paddleocr_api import recognize_text as _paddleocr_api_recognize
+    except ModuleNotFoundError:
+        _paddleocr_api_recognize = None
 
 
 FIELD_NAMES = [
@@ -168,11 +177,30 @@ def recognize_score(model: DigitRecognizer, crop_path: Path) -> tuple[str, float
 
 
 def run_chinese_ocr(root: Path, image: Image.Image) -> tuple[str, float]:
-    """识别姓名字段：优先使用 PaddleOCR 预训练中文模型，失败则降级到 chineseocr_lite。"""
+    """识别姓名字段：依次尝试 在线 API → 本地 PaddleOCR → chineseocr_lite。"""
+    text, conf = run_paddleocr_api(image)
+    if text:
+        return text, conf
     text, conf = run_paddleocr(image)
     if text:
         return text, conf
     return run_chineseocr_lite(root, image)
+
+
+def run_paddleocr_api(image: Image.Image) -> tuple[str, float]:
+    """用 PaddleOCR-VL 在线服务识别姓名（需设置环境变量 PADDLEOCR_API_TOKEN）。"""
+    if _paddleocr_api_recognize is None:
+        return "", 0.0
+    try:
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, format="JPEG", quality=95)
+        text = _paddleocr_api_recognize(buffer.getvalue())
+        name = clean_chinese_name(text)
+        if 1 <= len(name) <= 6:
+            return name, 1.0
+    except Exception:
+        pass
+    return "", 0.0
 
 
 @functools.lru_cache(maxsize=1)

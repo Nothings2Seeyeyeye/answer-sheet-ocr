@@ -37,7 +37,7 @@
 - 🎯 **两阶段「检测 + 识别」架构**：YOLO 定位 ROI → 分字段路由到专用识别器，各环节解耦、可独立替换。
 - ⚡ **纯 CPU 推理**：全部模型导出为 ONNX，克隆即可跑，无需 GPU 与 PyTorch 运行时。
 - 🧩 **分字段专用模型**：学号、各小题分数、总分使用独立微调的 CNN 数字识别模型，字级准确率最高 96.2%。
-- 🇨🇳 **中文姓名识别**：内置 `chineseocr_lite` 运行组件，并预留 **PaddleOCR** 预训练中文模型后端（可选依赖，识别更准，未安装时自动降级）。
+- 🇨🇳 **中文姓名识别**：三级后端自动降级——在线 **PaddleOCR-VL API**（精度最高）→ 本地 **PaddleOCR**（可选依赖）→ 内置 `chineseocr_lite`。
 - 🖥 **开箱即用的 Web 前端**：摄像头采集、图片/文件夹导入、重新识别、人工核对修改、确认记录、导出 Excel。
 - 🔌 **轻量 REST API**：`POST /api/recognize` 单图识别、`POST /api/export` 导出成绩表。
 - 🧪 **完整训练与评估工具链**：从 LabelImg 标注 → YOLO 数据集 → 检测/数字模型训练 → ONNX 导出 → 指标评估，全流程脚本。
@@ -133,13 +133,19 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 pip install -r requirements.txt
 ```
 
-> 依赖已按「推理最小集」裁剪：`flask`、`openpyxl`、`pillow`、`numpy`、`opencv-python-headless`、`onnxruntime`、`pyclipper`、`shapely`。
+> 依赖已按「推理最小集」裁剪：`flask`、`openpyxl`、`pillow`、`numpy`、`opencv-python-headless`、`onnxruntime`、`pyclipper`、`shapely`、`requests`。
 >
-> 💡 **可选**：安装 PaddleOCR 可启用更强的中文姓名识别（预训练模型，未安装时自动降级到内置 `chineseocr_lite`）：
+> 💡 **姓名识别后端（按优先级自动降级）**：
 >
-> ```bash
-> pip install paddleocr paddlepaddle
-> ```
+> 1. **在线 PaddleOCR-VL API**（精度最高，需设置环境变量）：
+>    ```bash
+>    export PADDLEOCR_API_TOKEN="your-token"
+>    ```
+> 2. **本地 PaddleOCR**（预训练中文模型）：
+>    ```bash
+>    pip install paddleocr paddlepaddle
+>    ```
+> 3. **内置 `chineseocr_lite`**（无需额外安装，自动兜底）。
 
 ### 2. 单图推理（命令行）
 
@@ -307,7 +313,7 @@ python scripts/export_onnx_models.py
 
 诚实说明当前模型的边界，便于你评估适用场景：
 
-1. **姓名（中文 OCR）是当前最弱环节**：内置 `chineseocr_lite` 在验证集上准确率为 **0.0%**（返回空）。已预留 **PaddleOCR** 预训练中文模型后端（`pip install paddleocr paddlepaddle` 后自动启用，识别更准），但若要达到上线级精度，建议针对性训练姓名样本。
+1. **姓名（中文 OCR）是当前最弱环节**：内置 `chineseocr_lite` 在验证集上准确率为 **0.0%**（返回空）。已提供三级后端降级（在线 PaddleOCR-VL API → 本地 PaddleOCR → chineseocr_lite），其中在线 API 精度最高但依赖网络与 TOKEN。若要达到上线级精度，建议针对性训练姓名样本。
 2. **总分识别较弱（23.2%）**：总分字段常为多位手写数字且易与其他分数行混淆，建议加入总分校验逻辑（如 `总分 == Σ小题分数`）或独立训练。
 3. **学号识别（56.6%）受定长切分限制**：定长 10 位切分对书写粘连、跨格敏感，可考虑引入 CTC 序列识别或可变长度方案。
 4. **Web 前端已支持人工核对**：设计上默认所有识别结果需人工确认后才进入最终 Excel，因此单字段误差不会直接污染成绩表。

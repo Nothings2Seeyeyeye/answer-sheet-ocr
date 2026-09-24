@@ -12,6 +12,11 @@ Thumbs.db
 *.log
 *.tmp
 
+# ---- 敏感凭据 ----
+.env
+.env.*
+!.env.example
+
 # ---- Vercel ----
 .vercel/
 
