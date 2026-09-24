@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 
@@ -20,6 +21,8 @@ try:
     import requests
 except ImportError:  # requests 为可选依赖
     requests = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
 
 JOB_URL = "https://paddleocr.aistudio-app.com/api/v2/ocr/jobs"
 MODEL = "PaddleOCR-VL-1.6"
@@ -69,6 +72,7 @@ def recognize_text(image_bytes: bytes, filename: str = "roi.jpg") -> str:
         resp.raise_for_status()
         job_id = resp.json()["data"]["jobId"]
     except Exception:
+        logger.warning("在线 PaddleOCR API 提交任务失败")
         return ""
 
     deadline = time.time() + _timeout()
@@ -79,22 +83,26 @@ def recognize_text(image_bytes: bytes, filename: str = "roi.jpg") -> str:
             r.raise_for_status()
             payload = r.json()["data"]
         except Exception:
+            logger.warning("在线 PaddleOCR API 查询任务状态失败")
             return ""
         state = payload.get("state")
         if state == "done":
             jsonl_url = payload["resultUrl"]["jsonUrl"]
             break
         if state == "failed":
+            logger.warning("在线 PaddleOCR API 任务失败: %s", payload.get("errorMsg", ""))
             return ""
         time.sleep(_POLL_INTERVAL)
 
     if not jsonl_url:
+        logger.warning("在线 PaddleOCR API 超时（超过 %.0fs）", _timeout())
         return ""
 
     try:
         jr = requests.get(jsonl_url, timeout=30)
         jr.raise_for_status()
     except Exception:
+        logger.warning("在线 PaddleOCR API 下载结果失败")
         return ""
 
     texts: list[str] = []

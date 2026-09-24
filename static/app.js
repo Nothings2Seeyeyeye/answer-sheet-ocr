@@ -122,10 +122,23 @@ async function recognizeBlob(blob, fileName) {
   const form = new FormData();
   form.append("image", blob, fileName);
   setStatus("正在识别...", "busy");
-  const response = await fetch("/api/recognize", { method: "POST", body: form });
-  const data = await response.json();
-  if (!data.ok) throw new Error(data.error || "识别失败");
-  fillResult(data.result);
+  // 1. 提交识别任务，拿到 task_id
+  const submitResp = await fetch("/api/recognize", { method: "POST", body: form });
+  const submitData = await submitResp.json();
+  if (!submitData.ok) throw new Error(submitData.error || "识别失败");
+  const taskId = submitData.task_id;
+  // 2. 轮询结果（间隔 1.5s，最多约 5 分钟）
+  for (let attempt = 0; attempt < 200; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const resResp = await fetch(`/api/result/${taskId}`);
+    const resData = await resResp.json();
+    if (resData.ok && resData.status === "done") {
+      fillResult(resData.result);
+      return;
+    }
+    if (!resData.ok) throw new Error(resData.error || "识别失败");
+  }
+  throw new Error("识别超时，请重试");
 }
 
 async function captureAndRecognize() {

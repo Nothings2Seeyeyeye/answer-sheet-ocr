@@ -207,10 +207,19 @@ docker run -p 7860:7860 answer-sheet-ocr
 
 ### `POST /api/recognize`
 
-上传单张图片，返回识别结果（`multipart/form-data`，字段名 `image`）。
+提交识别任务（`multipart/form-data`，字段名 `image`），返回 `task_id`。识别在后台线程执行，避免长时间阻塞：
 
 ```bash
 curl -F "image=@answer_sheet.jpg" http://127.0.0.1:7860/api/recognize
+# → {"ok": true, "task_id": "..."}
+```
+
+### `GET /api/result/<task_id>`
+
+轮询识别结果。`status=running` 表示处理中；`status=done` 时返回识别结果；`status=error` 表示失败：
+
+```bash
+curl http://127.0.0.1:7860/api/result/<task_id>
 ```
 
 ### `POST /api/export`

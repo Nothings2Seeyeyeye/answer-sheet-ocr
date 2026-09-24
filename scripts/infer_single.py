@@ -4,6 +4,7 @@ import argparse
 import functools
 import io
 import json
+import logging
 import sys
 import tempfile
 from pathlib import Path
@@ -31,6 +32,15 @@ except ModuleNotFoundError:
         from paddleocr_api import recognize_text as _paddleocr_api_recognize
     except ModuleNotFoundError:
         _paddleocr_api_recognize = None
+
+logger = logging.getLogger(__name__)
+
+# 推理配置（可按需调整）
+YOLO_IMAGE_SIZE = 1280
+YOLO_CONFIDENCE = 0.05
+NMS_IOU_THRESHOLD = 0.7
+PAD_RATIO_ID_NAME = 0.10
+PAD_RATIO_SCORE = 0.06
 
 
 FIELD_NAMES = [
@@ -88,7 +98,7 @@ def box_iou(one: np.ndarray, many: np.ndarray) -> np.ndarray:
     return intersection / np.maximum(one_area + many_area - intersection, 1e-7)
 
 
-def yolo_detections(image: Image.Image, model_path: Path, image_size: int = 1280, confidence: float = 0.05) -> dict[str, dict[str, Any]]:
+def yolo_detections(image: Image.Image, model_path: Path, image_size: int = YOLO_IMAGE_SIZE, confidence: float = YOLO_CONFIDENCE) -> dict[str, dict[str, Any]]:
     rgb = np.asarray(image)
     height, width = rgb.shape[:2]
     scale = min(image_size / height, image_size / width)
@@ -120,7 +130,7 @@ def yolo_detections(image: Image.Image, model_path: Path, image_size: int = 1280
             selected.append(current)
             if len(indexes) == 1:
                 break
-            indexes = indexes[1:][box_iou(boxes[current], boxes[indexes[1:]]) <= 0.7]
+            indexes = indexes[1:][box_iou(boxes[current], boxes[indexes[1:]]) <= NMS_IOU_THRESHOLD]
     output: dict[str, dict[str, Any]] = {}
     for index in selected:
         class_id = int(class_ids[index])
@@ -175,7 +185,7 @@ def run_paddleocr_api(image: Image.Image) -> tuple[str, float]:
         if 1 <= len(name) <= 6:
             return name, 1.0
     except Exception:
-        pass
+        logger.warning("在线 PaddleOCR API 识别失败，降级到本地后端")
     return "", 0.0
 
 
@@ -193,6 +203,7 @@ def run_paddleocr(image: Image.Image) -> tuple[str, float]:
         engine = load_paddleocr()
         results = engine.ocr(np.asarray(image.convert("RGB")), cls=True)
     except Exception:
+        logger.warning("本地 PaddleOCR 识别失败，降级到内置 chineseocr_lite")
         return "", 0.0
     candidates = []
     for line in results or []:
@@ -218,6 +229,7 @@ def run_chineseocr_lite(root: Path, image: Image.Image) -> tuple[str, float]:
     try:
         from model import OcrHandle  # type: ignore
     except Exception:
+        logger.warning("chineseocr_lite 导入失败")
         return "", 0.0
     try:
         handle = load_chinese_handle(str(engine_dir.resolve()))
@@ -227,6 +239,7 @@ def run_chineseocr_lite(root: Path, image: Image.Image) -> tuple[str, float]:
         results = handle.text_predict(Image.open(temp_path).convert("RGB"), 480)
         temp_path.unlink(missing_ok=True)
     except Exception:
+        logger.warning("chineseocr_lite 姓名识别失败")
         return "", 0.0
     candidates = []
     for _box, text, score in results:
@@ -267,7 +280,7 @@ def infer_image(image_path: str | Path, root: str | Path | None = None, cpu: boo
                     label = dict(DEFAULT_SCORE_FIELDS).get(field, field)
                     output_scores.append({"field": field, "label": label, "value": "", "confidence": 0.0})
                 continue
-            pad = 0.10 if field in {"name", "student_id"} else 0.06
+            pad = PAD_RATIO_ID_NAME if field in {"name", "student_id"} else PAD_RATIO_SCORE
             crop = crop_box(image, det["box"], pad)
             crop_path = temp_root / f"{field}.jpg"
             crop.save(crop_path, quality=95)
