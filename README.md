@@ -140,6 +140,9 @@ pip install -r requirements.txt
 > 1. **在线 PaddleOCR-VL API**（精度最高，需设置环境变量）：
 >    ```bash
 >    export PADDLEOCR_API_TOKEN="your-token"
+>    # 可选：总超时（秒，默认 180）；首次调用有冷启动延迟，可提前预热
+>    export PADDLEOCR_API_TIMEOUT="180"
+>    python scripts/warmup_paddleocr_api.py
 >    ```
 > 2. **本地 PaddleOCR**（预训练中文模型）：
 >    ```bash

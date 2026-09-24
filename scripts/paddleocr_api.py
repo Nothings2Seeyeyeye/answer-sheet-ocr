@@ -5,8 +5,8 @@
 
     export PADDLEOCR_API_TOKEN="your-token"
 
-未设置 TOKEN、未安装 ``requests``、或服务不可用时，:func:`recognize_text`
-返回空字符串，调用方应据此降级到本地识别后端。
+未设置 TOKEN、未安装 ``requests``、超过 ``PADDLEOCR_API_TIMEOUT``（默认 180 秒）、
+或服务不可用时，:func:`recognize_text` 返回空字符串，调用方应据此降级到本地识别后端。
 
 注意：TOKEN 属于敏感凭据，切勿硬编码进代码或提交到仓库。
 """
@@ -24,11 +24,18 @@ except ImportError:  # requests 为可选依赖
 JOB_URL = "https://paddleocr.aistudio-app.com/api/v2/ocr/jobs"
 MODEL = "PaddleOCR-VL-1.6"
 _POLL_INTERVAL = 3.0
-_MAX_POLLS = 60  # 最多轮询约 3 分钟
+_DEFAULT_TIMEOUT = 180.0  # 默认总超时（秒），可用环境变量 PADDLEOCR_API_TIMEOUT 覆盖
 
 
 def _token() -> str:
     return os.environ.get("PADDLEOCR_API_TOKEN", "")
+
+
+def _timeout() -> float:
+    try:
+        return float(os.environ.get("PADDLEOCR_API_TIMEOUT", str(_DEFAULT_TIMEOUT)))
+    except ValueError:
+        return _DEFAULT_TIMEOUT
 
 
 def _optional_payload() -> str:
@@ -64,8 +71,9 @@ def recognize_text(image_bytes: bytes, filename: str = "roi.jpg") -> str:
     except Exception:
         return ""
 
+    deadline = time.time() + _timeout()
     jsonl_url = ""
-    for _ in range(_MAX_POLLS):
+    while time.time() < deadline:
         try:
             r = requests.get(f"{JOB_URL}/{job_id}", headers=headers, timeout=30)
             r.raise_for_status()
