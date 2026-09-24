@@ -11,6 +11,8 @@
 [![ONNX Runtime](https://img.shields.io/badge/inference-ONNX%20Runtime-005CED.svg?logo=onnx&logoColor=white)](https://onnxruntime.ai/)
 [![YOLO](https://img.shields.io/badge/detection-Ultralytics%20YOLO-111F68.svg)](https://www.ultralytics.com/)
 [![Flask](https://img.shields.io/badge/web-Flask-000000.svg?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![CI](https://github.com/Nothings2Seeyeyeye/answer-sheet-ocr/actions/workflows/ci.yml/badge.svg)](https://github.com/Nothings2Seeyeyeye/answer-sheet-ocr/actions)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 
 </div>
 
@@ -35,7 +37,7 @@
 - 🎯 **两阶段「检测 + 识别」架构**：YOLO 定位 ROI → 分字段路由到专用识别器，各环节解耦、可独立替换。
 - ⚡ **纯 CPU 推理**：全部模型导出为 ONNX，克隆即可跑，无需 GPU 与 PyTorch 运行时。
 - 🧩 **分字段专用模型**：学号、各小题分数、总分使用独立微调的 CNN 数字识别模型，字级准确率最高 96.2%。
-- 🇨🇳 **中文姓名识别**：内置精简版 `chineseocr_lite` 运行组件，支持中文姓名字段识别。
+- 🇨🇳 **中文姓名识别**：内置 `chineseocr_lite` 运行组件，并预留 **PaddleOCR** 预训练中文模型后端（可选依赖，识别更准，未安装时自动降级）。
 - 🖥 **开箱即用的 Web 前端**：摄像头采集、图片/文件夹导入、重新识别、人工核对修改、确认记录、导出 Excel。
 - 🔌 **轻量 REST API**：`POST /api/recognize` 单图识别、`POST /api/export` 导出成绩表。
 - 🧪 **完整训练与评估工具链**：从 LabelImg 标注 → YOLO 数据集 → 检测/数字模型训练 → ONNX 导出 → 指标评估，全流程脚本。
@@ -132,6 +134,12 @@ pip install -r requirements.txt
 ```
 
 > 依赖已按「推理最小集」裁剪：`flask`、`openpyxl`、`pillow`、`numpy`、`opencv-python-headless`、`onnxruntime`、`pyclipper`、`shapely`。
+>
+> 💡 **可选**：安装 PaddleOCR 可启用更强的中文姓名识别（预训练模型，未安装时自动降级到内置 `chineseocr_lite`）：
+>
+> ```bash
+> pip install paddleocr paddlepaddle
+> ```
 
 ### 2. 单图推理（命令行）
 
@@ -169,6 +177,21 @@ run_frontend.bat
 
 浏览器打开 <http://127.0.0.1:7860>，即可摄像头拍照 / 导入图片 → 自动识别 → 人工核对 → 确认记录 → 导出 Excel。
 
+### 4. 使用 Docker
+
+```bash
+docker compose up -d --build
+```
+
+或单容器：
+
+```bash
+docker build -t answer-sheet-ocr .
+docker run -p 7860:7860 answer-sheet-ocr
+```
+
+浏览器打开 <http://127.0.0.1:7860>。
+
 ---
 
 ## 🔌 REST API
@@ -202,11 +225,16 @@ answer-sheet-ocr/
 ├── app.py                          # Flask Web 服务（前端后端 + REST API）
 ├── run_frontend.sh / .bat          # 一键启动前端
 ├── requirements.txt                # 推理最小依赖
-├── LICENSE
-├── README.md
+├── requirements-dev.txt            # 开发依赖（pytest）
+├── Dockerfile / docker-compose.yml # 容器化部署
+├── LICENSE / README.md
+├── CONTRIBUTING.md / CODE_OF_CONDUCT.md
+├── conftest.py                     # pytest 配置
+├── .github/                        # CI 与 Issue/PR 模板
 ├── scripts/
 │   ├── infer_single.py             # 单图推理（检测 + 分字段识别）
 │   ├── onnx_digit.py               # ONNX 数字识别器（切分 + CNN 分类）
+│   ├── text_utils.py               # 纯文本清洗函数（可独立测试）
 │   ├── train_yolo.py               # YOLO 检测模型训练
 │   ├── train_roi_digit_model.py    # ROI 数字模型微调
 │   ├── mnist_roi_digits.py         # 从标注框提取数字样本
@@ -226,6 +254,8 @@ answer-sheet-ocr/
 ├── data/
 │   └── field_yolo*/                # 类别定义 data.yaml + YOLO 标注（无图片）
 ├── metrics/                        # 聚合指标摘要（不含个人数据）
+├── tests/                          # 单元测试
+├── assets/                         # README 演示动图
 ├── static/                         # 前端 JS / CSS
 └── templates/                      # 前端 HTML
 ```
@@ -277,7 +307,7 @@ python scripts/export_onnx_models.py
 
 诚实说明当前模型的边界，便于你评估适用场景：
 
-1. **姓名（中文 OCR）端到端尚未打通**：`chineseocr_lite` 运行时已内置，但验证集上姓名字段识别准确率为 **0.0%**（返回空）。这是当前最需改进的环节，建议方向：替换为更强的中文识别引擎（如 PaddleOCR / 新版 CRNN）、针对性训练姓名样本、或退化为「仅定位 + 人工录入」。
+1. **姓名（中文 OCR）是当前最弱环节**：内置 `chineseocr_lite` 在验证集上准确率为 **0.0%**（返回空）。已预留 **PaddleOCR** 预训练中文模型后端（`pip install paddleocr paddlepaddle` 后自动启用，识别更准），但若要达到上线级精度，建议针对性训练姓名样本。
 2. **总分识别较弱（23.2%）**：总分字段常为多位手写数字且易与其他分数行混淆，建议加入总分校验逻辑（如 `总分 == Σ小题分数`）或独立训练。
 3. **学号识别（56.6%）受定长切分限制**：定长 10 位切分对书写粘连、跨格敏感，可考虑引入 CTC 序列识别或可变长度方案。
 4. **Web 前端已支持人工核对**：设计上默认所有识别结果需人工确认后才进入最终 Excel，因此单字段误差不会直接污染成绩表。
@@ -287,7 +317,7 @@ python scripts/export_onnx_models.py
 
 ## 🤝 贡献
 
-欢迎 Issue 与 PR。贡献前请阅读 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)（如提供）。
+欢迎 Issue 与 PR。请先阅读 [贡献指南](CONTRIBUTING.md) 与 [行为准则](CODE_OF_CONDUCT.md)。
 
 建议的贡献方向：
 
@@ -312,6 +342,7 @@ python scripts/export_onnx_models.py
 
 - [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) —— 字段检测基础模型
 - [chineseocr_lite](https://github.com/DayBreak-u/chineseocr_lite) —— 中文 OCR 运行组件
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) —— 中文姓名识别可选后端
 - [ONNX Runtime](https://github.com/microsoft/onnxruntime) —— 跨平台推理引擎
 - [Flask](https://github.com/pallets/flask) —— Web 服务框架
 

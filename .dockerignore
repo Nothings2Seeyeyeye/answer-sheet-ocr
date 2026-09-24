@@ -1,0 +1,48 @@
+# 版本控制与元数据
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Python 缓存
+__pycache__
+*.pyc
+.venv
+venv
+
+# 隐私：真实答题卡与真实学生信息（严禁打入镜像）
+labelimg_dataset
+frontend_outputs
+results
+results_70_72
+results_joint_70_72
+results_joint_new_models_test
+results_joint_test
+runs
+runs_70_72
+
+# 竞赛与专利材料
+patent_docs_work
+ppt_competition_work
+docs
+
+# 训练数据与冗余产物
+data
+*.pt
+*.zip
+PACKAGE_MANIFEST.json
+
+# 文档与测试（运行时不需要）
+README.md
+LICENSE
+assets
+tests
+.github
+conftest.py
+requirements-dev.txt
+
+# 系统与依赖
+.DS_Store
+node_modules
+.vercel
