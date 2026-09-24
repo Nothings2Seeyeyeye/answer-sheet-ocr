@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import functools
 import json
-import re
 import sys
 import tempfile
 from pathlib import Path
@@ -18,6 +17,11 @@ try:
     from scripts.onnx_digit import DigitRecognizer
 except ModuleNotFoundError:
     from onnx_digit import DigitRecognizer
+
+try:
+    from scripts.text_utils import clean_chinese_name, clean_digits, clean_number
+except ModuleNotFoundError:
+    from text_utils import clean_chinese_name, clean_digits, clean_number
 
 
 FIELD_NAMES = [
@@ -43,26 +47,6 @@ DEFAULT_SCORE_FIELDS = [
     ("score_2_6", "第2题(6)"),
     ("total", "总分"),
 ]
-
-
-def clean_digits(text: Any) -> str:
-    return "".join(ch for ch in str(text) if ch.isdigit())
-
-
-def clean_chinese_name(text: Any) -> str:
-    return re.sub(r"[^\u4e00-\u9fff]", "", str(text))
-
-
-def clean_number(text: Any) -> str:
-    value = "".join(ch for ch in str(text) if ch.isdigit() or ch == ".")
-    if value.count(".") > 1:
-        first = value.find(".")
-        value = value[: first + 1] + value[first + 1 :].replace(".", "")
-    if value.startswith("."):
-        value = "0" + value
-    if value.endswith("."):
-        value = value[:-1]
-    return value
 
 
 def crop_box(image: Image.Image, box: list[float], pad_ratio: float) -> Image.Image:
@@ -184,6 +168,45 @@ def recognize_score(model: DigitRecognizer, crop_path: Path) -> tuple[str, float
 
 
 def run_chinese_ocr(root: Path, image: Image.Image) -> tuple[str, float]:
+    """识别姓名字段：优先使用 PaddleOCR 预训练中文模型，失败则降级到 chineseocr_lite。"""
+    text, conf = run_paddleocr(image)
+    if text:
+        return text, conf
+    return run_chineseocr_lite(root, image)
+
+
+@functools.lru_cache(maxsize=1)
+def load_paddleocr():
+    """延迟加载 PaddleOCR 实例（初始化耗时较长，进程内缓存）。"""
+    from paddleocr import PaddleOCR  # type: ignore
+
+    return PaddleOCR(use_angle_cls=True, lang="ch", show_log=False)
+
+
+def run_paddleocr(image: Image.Image) -> tuple[str, float]:
+    """用 PaddleOCR 预训练中文模型识别姓名，兼容 PaddleOCR 2.x/3.x 的 ocr() 返回格式。"""
+    try:
+        engine = load_paddleocr()
+        results = engine.ocr(np.asarray(image.convert("RGB")), cls=True)
+    except Exception:
+        return "", 0.0
+    candidates = []
+    for line in results or []:
+        for item in line or []:
+            try:
+                _box, (text, score) = item
+            except (ValueError, TypeError):
+                continue
+            name = clean_chinese_name(text)
+            if 1 <= len(name) <= 6:
+                candidates.append((name, float(score)))
+    if not candidates:
+        return "", 0.0
+    return max(candidates, key=lambda item: (item[1], -abs(len(item[0]) - 3)))
+
+
+def run_chineseocr_lite(root: Path, image: Image.Image) -> tuple[str, float]:
+    """降级后端：内置的 chineseocr_lite 中文 OCR 运行组件。"""
     engine_dir = root / "third_party" / "chineseocr_lite"
     if not engine_dir.exists():
         return "", 0.0
