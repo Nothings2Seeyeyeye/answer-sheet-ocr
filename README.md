@@ -339,7 +339,7 @@ python scripts/export_onnx_models.py
 
 ## 🤝 贡献
 
-欢迎 Issue 与 PR。请先阅读 [贡献指南](CONTRIBUTING.md) 与 [行为准则](CODE_OF_CONDUCT.md)。
+欢迎 Issue 与 PR。请先阅读 [贡献指南](CONTRIBUTING.md) 与 [行为准则](CODE_OF_CONDUCT.md)。发现安全漏洞请参考 [安全政策](SECURITY.md)。
 
 建议的贡献方向：
 
@@ -352,7 +352,7 @@ python scripts/export_onnx_models.py
 
 ## 📄 许可证
 
-本项目代码采用 **[MIT License](LICENSE)**。
+本项目代码采用 **[MIT License](LICENSE)**。版本历史见 [更新日志](CHANGELOG.md)。
 
 > ⚠️ **第三方组件说明**：`third_party/chineseocr_lite` 为精简版 [chineseocr_lite](https://github.com/DayBreak-u/chineseocr_lite) 运行组件，遵循其原始 **GPL-2.0** 许可证，详见 [`third_party/chineseocr_lite/LICENSE`](third_party/chineseocr_lite/LICENSE)。该组件与其模型权重不属于 MIT 授权范围，使用时请遵守 GPL-2.0 条款。
 
