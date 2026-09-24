@@ -1,4 +1,4 @@
-"""纯文本清洗工具函数。
+"""识别管线纯逻辑工具函数。
 
 仅依赖标准库，可独立单元测试，供识别管线各环节复用。
 """
@@ -29,3 +29,34 @@ def clean_number(text: Any) -> str:
     if value.endswith("."):
         value = value[:-1]
     return value
+
+
+def apply_total_check(scores: list[dict[str, Any]]) -> None:
+    """用「总分 = Σ小题」约束校验并修正总分字段（就地修改）。
+
+    当总分缺失或与各小题之和不一致时，用小题之和覆盖总分，
+    并将置信度置 0 以提示人工核对；任一小题为空或不可解析时放弃校验。
+    """
+    sub_sum = 0.0
+    total_item = None
+    for item in scores:
+        if item["field"] == "total":
+            total_item = item
+            continue
+        value = str(item.get("value", "") or "").strip()
+        if value == "":
+            return
+        try:
+            sub_sum += float(value)
+        except ValueError:
+            return
+    if total_item is None:
+        return
+    total_raw = str(total_item.get("value", "") or "").strip()
+    try:
+        total_value = float(total_raw) if total_raw else None
+    except ValueError:
+        total_value = None
+    if total_value is None or abs(total_value - sub_sum) > 1e-6:
+        total_item["value"] = str(int(sub_sum)) if sub_sum.is_integer() else str(sub_sum)
+        total_item["confidence"] = 0.0

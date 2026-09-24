@@ -20,9 +20,9 @@ except ModuleNotFoundError:
     from onnx_digit import DigitRecognizer
 
 try:
-    from scripts.text_utils import clean_chinese_name, clean_digits, clean_number
+    from scripts.text_utils import apply_total_check, clean_chinese_name, clean_digits, clean_number
 except ModuleNotFoundError:
-    from text_utils import clean_chinese_name, clean_digits, clean_number
+    from text_utils import apply_total_check, clean_chinese_name, clean_digits, clean_number
 
 try:
     from scripts.paddleocr_api import recognize_text as _paddleocr_api_recognize
@@ -141,34 +141,10 @@ def yolo_detections(image: Image.Image, model_path: Path, image_size: int = 1280
     return output
 
 
-def fixed_digit_slices(image: Image.Image, count: int) -> list[Image.Image]:
-    gray = image.convert("L")
-    arr = np.asarray(gray)
-    threshold = min(220, int(np.percentile(arr, 35)) + 35)
-    mask = arr < threshold
-    ys, xs = np.where(mask)
-    if len(xs):
-        x0 = max(0, int(xs.min()) - 2)
-        x1 = min(gray.width, int(xs.max()) + 3)
-        y0 = max(0, int(ys.min()) - 3)
-        y1 = min(gray.height, int(ys.max()) + 4)
-        gray = gray.crop((x0, y0, x1, y1))
-    cells = []
-    for idx in range(count):
-        left = round(idx * gray.width / count)
-        right = round((idx + 1) * gray.width / count)
-        cells.append(gray.crop((left, 0, max(left + 1, right), gray.height)))
-    return cells
-
-
-def recognize_student(model: DigitRecognizer, crop: Image.Image) -> tuple[str, float]:
-    chars = []
-    confs = []
-    for cell in fixed_digit_slices(crop, 10):
-        char, conf = model.classify(cell)
-        chars.append(char)
-        confs.append(float(conf))
-    return "".join(chars), float(np.mean(confs)) if confs else 0.0
+def recognize_student(model: DigitRecognizer, crop_path: Path) -> tuple[str, float]:
+    """学号识别：复用投影分割 + CNN 分类（与分数识别一致的智能切分）。"""
+    text, conf, _details = model.recognize_numeric_roi(crop_path, mode="student")
+    return clean_digits(text), float(conf)
 
 
 def recognize_score(model: DigitRecognizer, crop_path: Path) -> tuple[str, float]:
@@ -298,7 +274,7 @@ def infer_image(image_path: str | Path, root: str | Path | None = None, cpu: boo
             if field == "name":
                 name, _conf = run_chinese_ocr(root_path, crop)
             elif field == "student_id":
-                student_id, _conf = recognize_student(student_model, crop)
+                student_id, _conf = recognize_student(student_model, crop_path)
             else:
                 value, conf = recognize_score(score_model, crop_path)
                 label = dict(DEFAULT_SCORE_FIELDS).get(field, field)
@@ -306,6 +282,7 @@ def infer_image(image_path: str | Path, root: str | Path | None = None, cpu: boo
 
     score_map = {item["field"]: item for item in output_scores}
     ordered_scores = [score_map.get(field, {"field": field, "label": label, "value": "", "confidence": 0.0}) for field, label in DEFAULT_SCORE_FIELDS]
+    apply_total_check(ordered_scores)
     return {
         "student_id": student_id,
         "name": name,
